@@ -10,7 +10,22 @@ def get_balance():
 
 
 def add_entry():
-    print('Запись добавлена')
+    account_data = get_data()
+
+    user_input = input('Выберите: расходы (р) или доходы (д): ').strip().lower()
+    date_input = input('Введите дату в формате дд.мм.гггг: ').strip().lower()
+    amount_input = int(input('Введите сумму: ').strip().lower())
+
+    if user_input == 'р':
+        save_data('expenses', date_input, amount_input)
+
+    elif user_input == 'д':
+        print(account_data[2]['expenses'])
+
+    else:
+        print('Неверная команда')
+
+    print('Запись добавлена!')
     print()
 
 
@@ -21,7 +36,19 @@ def delete_entry():
 
 
 def show_all_entries():
-    print('Все записи')
+    account_data = get_data()
+
+    user_input = input('Выберите: расходы (р) или доходы (д): ').strip().lower()
+
+    if user_input == 'р':
+        print(account_data[1]['income'])
+
+    elif user_input == 'д':
+        print(account_data[2]['expenses'])
+
+    else:
+        print('Неверная команда')
+
     print()
 
 
