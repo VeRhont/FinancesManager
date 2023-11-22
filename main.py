@@ -1,26 +1,39 @@
-from data_manager import get_data, save_data
+from colorama import Fore, init
+from data_manager import get_data, save_entry, save_balance
+
+
+def print_entries(entries):
+    print('Дата\t\tСумма')
+    for date, amount in entries.items():
+        print(f'{date}\t{amount}')
 
 
 def get_balance():
     account_data = get_data()
     balance = account_data[0]['balance']
 
-    print(balance)
+    print(f'Текущий баланс: {Fore.LIGHTBLUE_EX}{balance} р.')
     print()
 
 
 def add_entry():
-    account_data = get_data()
+    balance = get_data()[0]['balance']
 
     user_input = input('Выберите: расходы (р) или доходы (д): ').strip().lower()
     date_input = input('Введите дату в формате дд.мм.гггг: ').strip().lower()
     amount_input = int(input('Введите сумму: ').strip().lower())
 
     if user_input == 'р':
-        save_data('expenses', date_input, amount_input)
+        new_balance = balance - amount_input
+
+        save_balance(new_balance)
+        save_entry('expenses', date_input, amount_input)
 
     elif user_input == 'д':
-        print(account_data[2]['expenses'])
+        new_balance = balance + amount_input
+
+        save_balance(new_balance)
+        save_entry('income', date_input, amount_input)
 
     else:
         print('Неверная команда')
@@ -34,17 +47,22 @@ def delete_entry():
     print()
 
 
-
 def show_all_entries():
     account_data = get_data()
 
-    user_input = input('Выберите: расходы (р) или доходы (д): ').strip().lower()
+    user_input = input('Выберите: все записи (в), расходы (р) или доходы (д): ').strip().lower()
 
     if user_input == 'р':
-        print(account_data[1]['income'])
+        incomes = account_data[0]['income']
+        print_entries(incomes)
 
     elif user_input == 'д':
-        print(account_data[2]['expenses'])
+        expenses = account_data[0]['expenses']
+        print_entries(expenses)
+
+    elif user_input == 'в':
+        print(account_data[0]['income'])
+        print(account_data[0]['expenses'])
 
     else:
         print('Неверная команда')
@@ -57,7 +75,7 @@ def interactions():
 
     while True:
         user_input = input('Выберите действие:'
-                               '\n1 - Баланс'
+                               '\n1 - Просмотр баланса'
                                '\n2 - Добавить запись'
                                '\n3 - Удалить запись '
                                '\n4 - Просмотр всех записей'
@@ -81,6 +99,7 @@ def interactions():
 
 
 def main():
+    init(autoreset=True)
     interactions()
 
 
