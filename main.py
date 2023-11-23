@@ -23,17 +23,19 @@ def add_entry():
     date_input = input('Введите дату в формате дд.мм.гггг: ').strip().lower()
     amount_input = int(input('Введите сумму: ').strip().lower())
 
+    category = input('Введите категорию: ').strip().lower()
+
     if user_input == 'р':
         new_balance = balance - amount_input
 
         save_balance(new_balance)
-        save_entry('expenses', date_input, amount_input)
+        save_entry('expenses', date_input, amount_input, category)
 
     elif user_input == 'д':
         new_balance = balance + amount_input
 
         save_balance(new_balance)
-        save_entry('income', date_input, amount_input)
+        save_entry('income', date_input, amount_input, category)
 
     else:
         print('Неверная команда')
