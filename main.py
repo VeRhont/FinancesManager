@@ -1,12 +1,22 @@
+from prettytable import PrettyTable
 from colorama import Fore, init
 from data_manager import get_data, save_entry, delete_entry, save_balance
 
 
-def print_entries(entries, color=Fore.WHITE):
-    print('Дата\t\t\tКатегория\t\t\tСумма')
+def print_entries(entries):
+    END = '\033[0m'
+
+    table = PrettyTable()
+    table.field_names = ['ID', 'Дата', 'Категория', 'Сумма']
+
+    id = 1
     for date in entries.keys():
         for category, amount in entries[date].items():
-            print(f'{date}\t\t{category}\t\t\t{color}{amount}')
+            colored_amount = str(amount) + END
+            table.add_row([id, date, category, colored_amount])
+            id += 1
+
+    print(table)
 
 
 def get_balance():
@@ -44,18 +54,20 @@ def add_entry():
         print(f'{Fore.RED}Сумма должна быть неотрицательной!')
         print()
         return
-    amount = int(amount)
 
     category = input('Введите категорию: ').strip().lower()
 
     if user_input == 'р':
-        new_balance = balance - amount
+        new_balance = balance - int(amount)
+        amount = '\033[91m' + amount
+
 
         save_balance(new_balance)
         save_entry('expenses', date, amount, category)
 
     elif user_input == 'д':
-        new_balance = balance + amount
+        new_balance = balance + int(amount)
+        amount = '\033[92m' + amount
 
         save_balance(new_balance)
         save_entry('income', date, amount, category)
@@ -67,7 +79,7 @@ def add_entry():
     print()
 
 
-def delete_entry():
+def delete_entry1():
     print('Запись удалена!')
     print()
 
@@ -78,16 +90,24 @@ def show_all_entries():
     user_input = input('Выберите: все записи (в), расходы (р) или доходы (д): ').strip().lower()
 
     if user_input == 'р':
-        incomes = account_data[0]['expenses']
-        print_entries(incomes, Fore.RED)
+        expenses = account_data[0]['expenses']
+        print_entries(expenses)
 
     elif user_input == 'д':
-        expenses = account_data[0]['income']
-        print_entries(expenses, Fore.GREEN)
+        incomes = account_data[0]['income']
+        print_entries(incomes)
 
     elif user_input == 'в':
-        # TODO
-        pass
+
+        all_entries = account_data[0]['expenses']
+
+        for date, entry in account_data[0]['income'].items():
+            if date in all_entries.keys():
+                all_entries[date] |= entry
+            else:
+                all_entries[date] = entry
+
+        print_entries(all_entries)
 
     else:
         print(f'{Fore.RED}Неверная команда!')
