@@ -17,6 +17,7 @@ def print_entries(entries):
             id += 1
 
     print(table)
+    return table
 
 
 def get_balance():
@@ -79,15 +80,24 @@ def add_entry():
     print()
 
 
-def delete_entry1():
+def delete():
+
+    table = show_all_entries('в')
+    id = int(input('Введите номер записи, которую хотите удалить: ')) - 1
+
+    row_to_delete = table.rows[id]
+
+    delete_entry(row_to_delete[1], row_to_delete[2])
+
     print('Запись удалена!')
     print()
 
 
-def show_all_entries():
+def show_all_entries(user_input='-'):
     account_data = get_data()
 
-    user_input = input('Выберите: все записи (в), расходы (р) или доходы (д): ').strip().lower()
+    if user_input == '-':
+        user_input = input('Выберите: все записи (в), расходы (р) или доходы (д): ').strip().lower()
 
     if user_input == 'р':
         expenses = account_data[0]['expenses']
@@ -107,7 +117,8 @@ def show_all_entries():
             else:
                 all_entries[date] = entry
 
-        print_entries(all_entries)
+        entries = print_entries(all_entries)
+        return entries
 
     else:
         print(f'{Fore.RED}Неверная команда!')
@@ -134,7 +145,7 @@ def interactions():
             add_entry()
 
         elif user_input == '3':
-            delete_entry()
+            delete()
 
         elif user_input == '4':
             show_all_entries()
