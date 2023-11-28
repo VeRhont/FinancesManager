@@ -4,6 +4,10 @@ from data_manager import get_data, save_entry, delete_entry, save_balance
 
 
 def print_entries(entries):
+    if not entries:
+        print(f'{Fore.RED}Записей нет!\n')
+        return False
+
     END = '\033[0m'
 
     table = PrettyTable()
@@ -22,14 +26,14 @@ def print_entries(entries):
 
 def get_balance():
     account_data = get_data()
-    balance = account_data[0]['balance']
+    balance = account_data['balance']
 
     print(f'Текущий баланс: {Fore.LIGHTBLUE_EX}{balance} р.')
     print()
 
 
 def add_entry():
-    balance = get_data()[0]['balance']
+    balance = get_data()['balance']
 
     user_input = input('Выберите: расходы (р) или доходы (д): ').strip().lower()
     if user_input not in ('р', 'д'):
@@ -62,7 +66,6 @@ def add_entry():
         new_balance = balance - int(amount)
         amount = '\033[91m' + amount
 
-
         save_balance(new_balance)
         save_entry('expenses', date, amount, category)
 
@@ -83,13 +86,23 @@ def add_entry():
 def delete():
 
     table = show_all_entries('в')
+
+    if not table:
+        print(f'{Fore.RED}Записей нет!')
+        return
+
     id = int(input('Введите номер записи, которую хотите удалить: ')) - 1
 
     row_to_delete = table.rows[id]
 
-    delete_entry(row_to_delete[1], row_to_delete[2])
+    if row_to_delete[3].startswith('\033[92m'):
+        entry = 'income'
+    else:
+        entry = 'expenses'
 
-    print('Запись удалена!')
+    delete_entry(entry, row_to_delete[1], row_to_delete[2])
+
+    print(f'{Fore.LIGHTGREEN_EX}Запись удалена!')
     print()
 
 
@@ -100,18 +113,18 @@ def show_all_entries(user_input='-'):
         user_input = input('Выберите: все записи (в), расходы (р) или доходы (д): ').strip().lower()
 
     if user_input == 'р':
-        expenses = account_data[0]['expenses']
+        expenses = account_data['expenses']
         print_entries(expenses)
 
     elif user_input == 'д':
-        incomes = account_data[0]['income']
+        incomes = account_data['income']
         print_entries(incomes)
 
     elif user_input == 'в':
 
-        all_entries = account_data[0]['expenses']
+        all_entries = account_data['expenses']
 
-        for date, entry in account_data[0]['income'].items():
+        for date, entry in account_data['income'].items():
             if date in all_entries.keys():
                 all_entries[date] |= entry
             else:
@@ -135,6 +148,8 @@ def interactions():
                                '\n2 - Добавить запись'
                                '\n3 - Удалить запись '
                                '\n4 - Просмотр всех записей'
+                               '\n5 - Просмотр всех записей по дате'
+                               '\n6 - Просмотр всех записей по категории'
                                '\nQ - Выход из приложения'
                                '\n--> ')
 
@@ -148,6 +163,12 @@ def interactions():
             delete()
 
         elif user_input == '4':
+            show_all_entries()
+
+        elif user_input == '5':
+            show_all_entries()
+
+        elif user_input == '6':
             show_all_entries()
 
         elif user_input == 'Q':
