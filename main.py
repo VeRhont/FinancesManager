@@ -28,8 +28,21 @@ def get_balance():
     account_data = get_data()
     balance = account_data['balance']
 
-    print(f'Текущий баланс: {Fore.LIGHTBLUE_EX}{balance} р.')
+    print(f'Текущий баланс: {Fore.LIGHTBLUE_EX}{balance:.2f} р.')
     print()
+
+
+def get_all_entries():
+    account_data = get_data()
+    all_entries = account_data['expenses']
+
+    for date, entry in account_data['income'].items():
+        if date in all_entries.keys():
+            all_entries[date] |= entry
+        else:
+            all_entries[date] = entry
+
+    return all_entries
 
 
 def add_entry():
@@ -55,7 +68,7 @@ def add_entry():
         return
 
     amount = input('Введите сумму: ')
-    if not (amount.isdigit() and int(amount) >= 0):
+    if not (amount.isdigit() and float(amount) >= 0):
         print(f'{Fore.RED}Сумма должна быть неотрицательной!')
         print()
         return
@@ -63,14 +76,14 @@ def add_entry():
     category = input('Введите категорию: ').strip().lower()
 
     if user_input == 'р':
-        new_balance = balance - int(amount)
+        new_balance = balance - float(amount)
         amount = '\033[91m' + amount
 
         save_balance(new_balance)
         save_entry('expenses', date, amount, category)
 
     elif user_input == 'д':
-        new_balance = balance + int(amount)
+        new_balance = balance + float(amount)
         amount = '\033[92m' + amount
 
         save_balance(new_balance)
@@ -84,22 +97,37 @@ def add_entry():
 
 
 def delete():
-
     table = show_all_entries('в')
 
     if not table:
         print(f'{Fore.RED}Записей нет!')
         return
 
-    id = int(input('Введите номер записи, которую хотите удалить: ')) - 1
+    id = input('Введите номер записи, которую хотите удалить (о - отмена): ')
+    if id == 'о':
+        print(f'{Fore.RED}Отмена удаления')
+        print()
+        return
+
+    id = int(id) - 1
+    if id >= len(table.rows) or id < 0:
+        print(f'{Fore.RED}Неверный номер строки')
+        print()
+        return
 
     row_to_delete = table.rows[id]
 
+    new_balance = get_data()['balance']
+    amount = float(str(row_to_delete[3])[5:-4])
+
     if row_to_delete[3].startswith('\033[92m'):
+        new_balance -= amount
         entry = 'income'
     else:
+        new_balance += amount
         entry = 'expenses'
 
+    save_balance(new_balance)
     delete_entry(entry, row_to_delete[1], row_to_delete[2])
 
     print(f'{Fore.LIGHTGREEN_EX}Запись удалена!')
@@ -122,13 +150,7 @@ def show_all_entries(user_input='-'):
 
     elif user_input == 'в':
 
-        all_entries = account_data['expenses']
-
-        for date, entry in account_data['income'].items():
-            if date in all_entries.keys():
-                all_entries[date] |= entry
-            else:
-                all_entries[date] = entry
+        all_entries = get_all_entries()
 
         entries = print_entries(all_entries)
         return entries
@@ -139,19 +161,52 @@ def show_all_entries(user_input='-'):
     print()
 
 
+def show_entries_by_date():
+    start_date = input('Введите начальную дату: ')
+    end_date = input('Введите конечную дату: ')
+
+    all_entries = get_all_entries()
+
+    necessary_entries = {}
+    for date in all_entries:
+        if start_date <= date <= end_date:
+            necessary_entries[date] = all_entries[date]
+
+    print_entries(necessary_entries)
+
+
+def show_entries_by_category():
+    category = input('Введите категорию для сортировки: ')
+
+    all_entries = get_all_entries()
+
+    necessary_entries = {}
+    for date in all_entries:
+        for c in all_entries[date]:
+            if c == category:
+                necessary_entries[date] = {c: all_entries[date][c]}
+
+    if necessary_entries:
+        print_entries(necessary_entries)
+    else:
+        print(f'{Fore.RED}Нет записей с этой категорией')
+        print()
+
+
 def interactions():
-    print('Finances')
+    print(f'{Fore.LIGHTBLUE_EX}Your Finances')
+    print()
 
     while True:
         user_input = input('Выберите действие:'
-                               '\n1 - Просмотр баланса'
-                               '\n2 - Добавить запись'
-                               '\n3 - Удалить запись '
-                               '\n4 - Просмотр всех записей'
-                               '\n5 - Просмотр всех записей по дате'
-                               '\n6 - Просмотр всех записей по категории'
-                               '\nQ - Выход из приложения'
-                               '\n--> ')
+                           '\n1 - Просмотр баланса'
+                           '\n2 - Добавить запись'
+                           '\n3 - Удалить запись'
+                           '\n4 - Просмотр всех записей'
+                           '\n5 - Просмотр всех записей по дате'
+                           '\n6 - Просмотр всех записей по категории'
+                           '\nQ - Выход из приложения'
+                           '\n--> ')
 
         if user_input == '1':
             get_balance()
@@ -166,10 +221,10 @@ def interactions():
             show_all_entries()
 
         elif user_input == '5':
-            show_all_entries()
+            show_entries_by_date()
 
         elif user_input == '6':
-            show_all_entries()
+            show_entries_by_category()
 
         elif user_input == 'Q':
             quit()

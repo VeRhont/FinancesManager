@@ -8,12 +8,16 @@ def get_data():
     return data[0]
 
 
+def save_data_to_json(data):
+    with open('account_data.json', 'w', encoding='utf-8') as file:
+        file.write(json.dumps([data], indent=2, ensure_ascii=False))
+
+
 def save_balance(new_balance):
     data = get_data()
     data['balance'] = new_balance
 
-    with open('account_data.json', 'w', encoding='utf-8') as file:
-        file.write(json.dumps([data], indent=2, ensure_ascii=False))
+    save_data_to_json(data)
 
 
 def save_entry(entry, date, amount, category):
@@ -27,8 +31,11 @@ def save_entry(entry, date, amount, category):
     else:
         data[entry][date][category] += amount
 
-    with open('account_data.json', 'w', encoding='utf-8') as file:
-        file.write(json.dumps([data], indent=2, ensure_ascii=False))
+    sorted_keys = sorted(data[entry], key=lambda x: x.split('.')[0] + x.split('.')[1] * 30 + x.split('.')[2] * 365)
+    sorted_dict = {i: data[entry][i] for i in sorted_keys}
+    data[entry] = sorted_dict
+
+    save_data_to_json(data)
 
 
 def delete_entry(entry, date, category):
@@ -38,5 +45,4 @@ def delete_entry(entry, date, category):
     if data[entry][date] == {}:
         data[entry].pop(date)
 
-    with open('account_data.json', 'w', encoding='utf-8') as file:
-        file.write(json.dumps([data], indent=2, ensure_ascii=False))
+    save_data_to_json(data)
