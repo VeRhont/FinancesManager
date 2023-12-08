@@ -46,54 +46,38 @@ def get_all_entries():
 
 
 def add_entry():
-    balance = get_data()['balance']
+    def wrong_input(message):
+        print(f'{Fore.RED}{message}!\n')
 
+    balance = get_data()['balance']
     user_input = input('Выберите: расходы (р) или доходы (д): ').strip().lower()
-    if user_input not in ('р', 'д'):
-        print(f'{Fore.RED}Неверная команда!')
-        print()
-        return
+    if user_input not in ('р', 'д'): return wrong_input('Неверный ввод')
 
     date = input('Введите дату в формате дд.мм.гггг: ').strip().lower()
     try:
-        if not ((1 <= int(date.split('.')[0]) <= 31) and
-                (1 <= int(date.split('.')[1]) <= 12) and
-                ((0 < int(date.split('.')[2]) <= 9999))):
-            print(f'{Fore.RED}Несуществующая дата!')
-            print()
-            return
+        temp_date = date.split('.')
+        if not ((1 <= int(temp_date[0]) <= 31) and (1 <= int(temp_date[1]) <= 12) and
+                ((0 < int(temp_date[2]) <= 9999))): return wrong_input('Неверная дата')
     except:
-        print(f'{Fore.RED}Неверный формат даты!')
-        print()
-        return
+        return wrong_input('Неверная дата')
 
     amount = input('Введите сумму: ')
-    if not (amount.isdigit() and float(amount) >= 0):
-        print(f'{Fore.RED}Сумма должна быть неотрицательной!')
-        print()
-        return
-
     category = input('Введите категорию: ').strip().lower()
+
+    if not (amount.isdigit() and float(amount) >= 0): return wrong_input('Отрицательная сумма')
 
     if user_input == 'р':
         new_balance = balance - float(amount)
-        amount = '\033[91m' + amount
-
+        amount = '\033[91m' + amount  # Окрашивает в красный цвет
         save_balance(new_balance)
         save_entry('expenses', date, amount, category)
-
-    elif user_input == 'д':
+    else:
         new_balance = balance + float(amount)
-        amount = '\033[92m' + amount
-
+        amount = '\033[92m' + amount  # Окрашивает в зеленый цвет
         save_balance(new_balance)
         save_entry('income', date, amount, category)
 
-    else:
-        print(f'{Fore.RED}Неверная команда!')
-
-    print(f'{Fore.LIGHTGREEN_EX}Запись добавлена!')
-    print()
+    print(f'{Fore.LIGHTGREEN_EX}Запись добавлена!\n')
 
 
 def delete():
@@ -105,18 +89,15 @@ def delete():
 
     id = input('Введите номер записи, которую хотите удалить (о - отмена): ')
     if id == 'о':
-        print(f'{Fore.RED}Отмена удаления')
-        print()
+        print(f'{Fore.RED}Отмена удаления\n')
         return
 
     id = int(id) - 1
     if id >= len(table.rows) or id < 0:
-        print(f'{Fore.RED}Неверный номер строки')
-        print()
+        print(f'{Fore.RED}Неверный номер строки\n')
         return
 
     row_to_delete = table.rows[id]
-
     new_balance = get_data()['balance']
     amount = float(str(row_to_delete[3])[5:-4])
 
@@ -130,8 +111,7 @@ def delete():
     save_balance(new_balance)
     delete_entry(entry, row_to_delete[1], row_to_delete[2])
 
-    print(f'{Fore.LIGHTGREEN_EX}Запись удалена!')
-    print()
+    print(f'{Fore.LIGHTGREEN_EX}Запись удалена!\n')
 
 
 def show_all_entries(user_input='-'):
@@ -139,26 +119,18 @@ def show_all_entries(user_input='-'):
 
     if user_input == '-':
         user_input = input('Выберите: все записи (в), расходы (р) или доходы (д): ').strip().lower()
-
     if user_input == 'р':
         expenses = account_data['expenses']
         print_entries(expenses)
-
     elif user_input == 'д':
         incomes = account_data['income']
         print_entries(incomes)
-
     elif user_input == 'в':
-
         all_entries = get_all_entries()
-
         entries = print_entries(all_entries)
         return entries
-
     else:
-        print(f'{Fore.RED}Неверная команда!')
-
-    print()
+        print(f'{Fore.RED}Неверная команда!\n')
 
 
 def show_entries_by_date():
@@ -193,6 +165,26 @@ def show_entries_by_category():
         print()
 
 
+def show_sorted_entries():
+    user_input = input('Отсортировать от большего к меньшему - 0, от меньшего к большему - 1: ')
+    if user_input not in ('0', '1'):
+        print(f'{Fore.RED}Неверный ввод!\n')
+    else:
+        all_entries = get_all_entries()
+
+        def sort_key(x, user_input):
+            price = list(x[1].items())[0][1][5:]
+            return int(price) if int(user_input) else (-1) * int(price)
+
+        sorted_entries_list = sorted(all_entries.items(), key=lambda x: sort_key(x, user_input))
+
+        sorted_entries = {}
+        for date, entry in sorted_entries_list:
+            sorted_entries |= {date: entry}
+
+        print_entries(sorted_entries)
+
+
 def interactions():
     print(f'{Fore.LIGHTBLUE_EX}Your Finances')
     print()
@@ -205,30 +197,26 @@ def interactions():
                            '\n4 - Просмотр всех записей'
                            '\n5 - Просмотр всех записей по дате'
                            '\n6 - Просмотр всех записей по категории'
+                           '\n7 - Отсортировать записи'
                            '\nQ - Выход из приложения'
                            '\n--> ')
 
         if user_input == '1':
             get_balance()
-
         elif user_input == '2':
             add_entry()
-
         elif user_input == '3':
             delete()
-
         elif user_input == '4':
             show_all_entries()
-
         elif user_input == '5':
             show_entries_by_date()
-
         elif user_input == '6':
             show_entries_by_category()
-
+        elif user_input == '7':
+            show_sorted_entries()
         elif user_input == 'Q':
             quit()
-
         else:
             print(f'{Fore.RED}Неверная команда!')
             print()
